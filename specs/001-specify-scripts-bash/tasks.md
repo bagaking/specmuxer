@@ -61,18 +61,18 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **NOTE: Write these tests FIRST, ensure they FAIL before implementation. Do not begin implementation until coverage impact is understood.**
 
-- [ ] T014 [US1] Write integration test covering run→status lifecycle in internal/integration/run_status_test.go
-- [ ] T015 [P] [US1] Add unit tests for status JSON formatting in pkg/telemetry/stats/formatter_test.go
+- [X] T014 [US1] Write integration test covering run→status lifecycle in internal/integration/run_status_test.go
+- [X] T015 [P] [US1] Add unit tests for status JSON formatting in pkg/telemetry/stats/formatter_test.go
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Implement run orchestrator service launching tmux sessions in pkg/orchestrator/run/service.go
-- [ ] T017 [US1] Wire run Cobra command with `--` and `--env` handling in cmd/specmuxer/run.go
-- [ ] T018 [US1] Implement status command with table/json/wide outputs in cmd/specmuxer/status.go
-- [ ] T019 [US1] Implement top streaming loop with idle threshold checks in pkg/telemetry/stats/top.go
-- [ ] T020 [US1] Implement attach command with session selector in cmd/specmuxer/attach.go
-- [ ] T021 [US1] Implement per-session log writer with timestamps in pkg/orchestrator/run/log_writer.go
-- [ ] T022 [P] [US1] Implement status/sidebar UI renderer in pkg/ui/statusbar/statusbar.go
+- [X] T016 [US1] Implement run orchestrator service launching tmux sessions in pkg/orchestrator/run/service.go
+- [X] T017 [US1] Wire run Cobra command with `--` and `--env` handling in cmd/specmuxer/run.go
+- [X] T018 [US1] Implement status command with table/json/wide outputs in cmd/specmuxer/status.go
+- [X] T019 [US1] Implement top streaming loop with idle threshold checks in pkg/telemetry/stats/top.go
+- [X] T020 [US1] Implement attach command with session selector in cmd/specmuxer/attach.go
+- [X] T021 [US1] Implement per-session log writer with timestamps in pkg/orchestrator/run/log_writer.go
+- [X] T022 [P] [US1] Implement status/sidebar UI renderer in pkg/ui/statusbar/statusbar.go
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -88,17 +88,17 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **NOTE: Ensure new tests enforce layering boundaries and reuse existing fixtures where possible.**
 
-- [ ] T023 [US2] Write integration test for resume --all recovery in internal/integration/resume_test.go
-- [ ] T024 [P] [US2] Add unit tests for resume eligibility filtering in pkg/orchestrator/resume/filter_test.go
+- [X] T023 [US2] Write integration test for resume --all recovery in internal/integration/resume_test.go
+- [X] T024 [P] [US2] Add unit tests for resume eligibility filtering in pkg/orchestrator/resume/filter_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Implement resume service applying adapter state/hooks in pkg/orchestrator/resume/service.go
-- [ ] T026 [US2] Wire resume Cobra command with `--all` and `--dry-run` in cmd/specmuxer/resume.go
-- [ ] T027 [US2] Persist user_killed flag and resume hooks in session YAML writer pkg/domain/session/session_yaml.go
-- [ ] T028 [US2] Implement adapter resume plumbing including extract_state in pkg/adapters/registry_resume.go
-- [ ] T029 [US2] Add configuration option for automatic resume in pkg/orchestrator/config/autoresume.go
-- [ ] T030 [P] [US2] Extend telemetry collector to record resume metrics in pkg/telemetry/stats/resume_metrics.go
+- [X] T025 [US2] Implement resume service applying adapter state/hooks in pkg/orchestrator/resume/service.go
+- [X] T026 [US2] Wire resume Cobra command with `--all` and `--dry-run` in cmd/specmuxer/resume.go
+- [X] T027 [US2] Persist user_killed flag and resume hooks in session YAML writer pkg/domain/session/session_yaml.go
+- [X] T028 [US2] Implement adapter resume plumbing including extract_state in pkg/adapters/registry_resume.go
+- [X] T029 [US2] Add configuration option for automatic resume in pkg/orchestrator/config/autoresume.go
+- [X] T030 [P] [US2] Extend telemetry collector to record resume metrics in pkg/telemetry/stats/resume_metrics.go
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
