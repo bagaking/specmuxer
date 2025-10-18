@@ -41,11 +41,11 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 - [X] T006 Model session domain structs with YAML tags in pkg/domain/session/session.go
 - [X] T007 Implement YAML persistence driver for sessions/stats in pkg/runtime/storage/yaml_store.go
 - [X] T008 Implement log rotation and redaction manager in pkg/telemetry/logs/manager.go
-- [ ] T009 Implement tmux client wrappers for session/window ops in pkg/runtime/tmux/client.go
-- [ ] T010 Implement adapter registry with default codex/claude profiles in pkg/adapters/registry.go
-- [ ] T011 Implement telemetry collector for status/top metrics in pkg/telemetry/stats/collector.go
+- [X] T009 Implement tmux client wrappers for session/window ops in pkg/runtime/tmux/client.go
+- [X] T010 Implement adapter registry with default codex/claude profiles in pkg/adapters/registry.go
+- [X] T011 Implement telemetry collector for status/top metrics in pkg/telemetry/stats/collector.go
 - [X] T012 [P] Add unit tests for session serialization round-trip in pkg/domain/session/session_test.go
-- [ ] T013 [P] Add unit tests for tmux client error handling in pkg/runtime/tmux/client_test.go
+- [X] T013 [P] Add unit tests for tmux client error handling in pkg/runtime/tmux/client_test.go
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
