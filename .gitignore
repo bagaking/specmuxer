@@ -1,0 +1,21 @@
+.codex
+
+# Go build artifacts
+bin/
+build/
+*.exe
+*.test
+*.out
+vendor/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.serena/

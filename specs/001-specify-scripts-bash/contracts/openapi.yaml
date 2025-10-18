@@ -1,0 +1,328 @@
+openapi: 3.1.0
+info:
+  title: SpecMuxer CLI Contract
+  version: 0.1.0
+  description: |
+    REST-form representation of SpecMuxer's CLI commands to support future automation
+    and integration with higher-level tooling. Each operation mirrors an equivalent CLI invocation.
+servers:
+  - url: http://localhost:8787
+    description: Placeholder for future daemon; CLI currently executes commands locally.
+paths:
+  /sessions/run:
+    post:
+      summary: Launch a new tool session
+      operationId: runSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tool, workingDir]
+              properties:
+                tool:
+                  type: string
+                  description: Adapter key (e.g., codex, claude).
+                args:
+                  type: array
+                  items:
+                    type: string
+                  description: Arguments passed after `--`.
+                env:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Environment overrides applied to the tool process.
+                workingDir:
+                  type: string
+                  format: uri-reference
+                  description: Absolute path for the session root.
+                name:
+                  type: string
+                  description: Friendly session name.
+                detach:
+                  type: boolean
+                  default: false
+                  description: Run without attaching to the tmux window.
+      responses:
+        "202":
+          description: Session accepted and launching
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionRecord"
+  /sessions/resume:
+    post:
+      summary: Resume interrupted sessions within a workspace
+      operationId: resumeSessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workingDir:
+                  type: string
+                  description: Absolute directory path; defaults to current workspace.
+                includeAll:
+                  type: boolean
+                  default: false
+                  description: Whether to resume across all tracked projects.
+                dryRun:
+                  type: boolean
+                  default: false
+                  description: If true, validate eligibility without launching.
+      responses:
+        "200":
+          description: Resume summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attempted:
+                    type: integer
+                  succeeded:
+                    type: integer
+                  skipped:
+                    type: integer
+                    description: Sessions skipped due to user_killed or missing adapter.
+                  failures:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Failure"
+  /sessions/{sessionId}/attach:
+    post:
+      summary: Attach to an existing tmux session window
+      operationId: attachSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: window
+          in: query
+          schema:
+            type: string
+            description: Optional window identifier.
+      responses:
+        "204":
+          description: Attach triggered successfully
+        "404":
+          description: Session not running
+  /sessions/status:
+    get:
+      summary: Retrieve project/session hierarchy health
+      operationId: getStatus
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [table, json, wide]
+            default: table
+      responses:
+        "200":
+          description: Status snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusSnapshot"
+  /sessions/top:
+    get:
+      summary: Stream live activity metrics
+      operationId: getTop
+      responses:
+        "200":
+          description: Streaming metrics
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE-formatted metrics snapshots.
+  /sessions/{sessionId}/stop:
+    post:
+      summary: Stop a session gracefully or forcefully
+      operationId: stopSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: force
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "202":
+          description: Stop initiated
+  /sessions/{sessionId}/logs:
+    get:
+      summary: Retrieve or follow a session log
+      operationId: getSessionLogs
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: follow
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Log payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lines:
+                    type: array
+                    items:
+                      type: string
+                  cursor:
+                    type: string
+                    description: Opaque pointer for follow pagination.
+  /maintenance/gc:
+    post:
+      summary: Cleanup orphaned resources or adopt unmanaged tmux sessions
+      operationId: runGc
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dryRun:
+                  type: boolean
+                  default: false
+                adopt:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: GC summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pruned:
+                    type: array
+                    items:
+                      type: string
+                  adopted:
+                    type: array
+                    items:
+                      type: string
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+  /maintenance/doctor:
+    get:
+      summary: Validate environment prerequisites and config integrity
+      operationId: runDoctor
+      responses:
+        "200":
+          description: Doctor report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DoctorCheck"
+                  overallStatus:
+                    type: string
+                    enum: [pass, warn, fail]
+
+components:
+  schemas:
+    SessionRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        tool:
+          type: string
+        status:
+          type: string
+          enum: [running, idle, stopped, failed]
+        tmux:
+          type: object
+          properties:
+            session:
+              type: string
+            window:
+              type: string
+        lastOutputAt:
+          type: string
+          format: date-time
+        userKilled:
+          type: boolean
+        resumeEligible:
+          type: boolean
+        logFiles:
+          type: array
+          items:
+            type: string
+    StatusSnapshot:
+      type: object
+      properties:
+        collectedAt:
+          type: string
+          format: date-time
+        projects:
+          type: array
+          items:
+            type: object
+            properties:
+              projectId:
+                type: string
+              rootPath:
+                type: string
+              sessions:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionRecord"
+    Failure:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        reason:
+          type: string
+        actionable:
+          type: string
+          description: Suggested next step.
+    DoctorCheck:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [pass, warn, fail]
+        message:
+          type: string
+        remediation:
+          type: string
