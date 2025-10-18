@@ -114,17 +114,17 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **NOTE: Extend observability assertions to cover new metrics/logging introduced by this story.**
 
-- [ ] T031 [US3] Write integration test covering logs/gc/doctor flow in internal/integration/logs_gc_test.go
-- [ ] T032 [P] [US3] Add unit tests for doctor check matrix in internal/applier/doctor/checks_test.go
+- [X] T031 [US3] Write integration test covering logs/gc/doctor flow in internal/integration/logs_gc_test.go
+- [X] T032 [P] [US3] Add unit tests for doctor check matrix in internal/applier/doctor/checks_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Implement logs command with redaction and follow cursor in cmd/specmuxer/logs.go
-- [ ] T034 [US3] Implement log rotation worker bound to manager in pkg/telemetry/logs/rotation.go
-- [ ] T035 [US3] Implement GC workflow detecting orphan sessions in internal/applier/gc/gc.go
-- [ ] T036 [US3] Implement adopt/ignore prompt UI in pkg/ui/sidebar/gc_prompt.go
-- [ ] T037 [US3] Implement doctor checks for tmux/PATH/permissions/config in internal/applier/doctor/checks.go
-- [ ] T038 [US3] Publish stats snapshot including resume success rate in pkg/telemetry/stats/snapshot.go
+- [X] T033 [US3] Implement logs command with redaction and follow cursor in cmd/specmuxer/logs.go
+- [X] T034 [US3] Implement log rotation worker bound to manager in pkg/telemetry/logs/rotation.go
+- [X] T035 [US3] Implement GC workflow detecting orphan sessions in internal/applier/gc/gc.go
+- [X] T036 [US3] Implement adopt/ignore prompt UI in pkg/ui/sidebar/gc_prompt.go
+- [X] T037 [US3] Implement doctor checks for tmux/PATH/permissions/config in internal/applier/doctor/checks.go
+- [X] T038 [US3] Publish stats snapshot including resume success rate in pkg/telemetry/stats/snapshot.go
 
 **Checkpoint**: All user stories should now be independently functional
 

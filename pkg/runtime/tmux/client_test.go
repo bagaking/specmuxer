@@ -213,6 +213,41 @@ func TestKillSessionError(t *testing.T) {
 	}
 }
 
+func TestAttachSession(t *testing.T) {
+	runner := &stubRunner{
+		responses: []runResponse{
+			{exitCode: 0},
+		},
+	}
+	client := New(WithRunner(runner))
+
+	err := client.Attach(context.Background(), AttachOptions{
+		Session: "specmuxer:p-1",
+		Socket:  "/tmp/socket",
+	})
+	if err != nil {
+		t.Fatalf("Attach: %v", err)
+	}
+	assertArgsEqual(t, runner.calls[0].Args, []string{"-S", "/tmp/socket", "attach-session", "-t", "specmuxer:p-1"})
+}
+
+func TestHasSession(t *testing.T) {
+	runner := &stubRunner{
+		responses: []runResponse{
+			{exitCode: 0},
+		},
+	}
+	client := New(WithRunner(runner))
+
+	got, err := client.HasSession(context.Background(), "specmuxer:p-1", "/tmp/socket")
+	if err != nil {
+		t.Fatalf("HasSession: %v", err)
+	}
+	if !got {
+		t.Fatalf("expected session to exist")
+	}
+}
+
 type stubRunner struct {
 	responses []runResponse
 	calls     []runCall

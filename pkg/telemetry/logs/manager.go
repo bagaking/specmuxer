@@ -225,6 +225,11 @@ func sanitizeSegment(sessionID string) string {
 	return strings.Trim(b.String(), "_")
 }
 
+// SanitizeSessionID exposes the sanitization logic for readers.
+func SanitizeSessionID(sessionID string) string {
+	return sanitizeSegment(sessionID)
+}
+
 func openAppend(path string) (*os.File, bool, error) {
 	_, err := os.Stat(path)
 	created := errors.Is(err, os.ErrNotExist)

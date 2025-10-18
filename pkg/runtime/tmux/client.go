@@ -169,6 +169,28 @@ func (c *Client) KillSession(ctx context.Context, opts KillSessionOptions) error
 	return nil
 }
 
+// HasSession reports whether the given tmux session exists.
+func (c *Client) HasSession(ctx context.Context, session, socket string) (bool, error) {
+	session = strings.TrimSpace(session)
+	if session == "" {
+		return false, errors.New("session name is required")
+	}
+	socket = c.resolveSocket(socket)
+
+	args := c.baseArgs(socket, "has-session", "-t", session)
+	_, stderr, exitCode, err := c.runner.Run(ctx, args, nil)
+	if err != nil {
+		return false, fmt.Errorf("tmux has-session: %w", err)
+	}
+	if exitCode == 0 {
+		return true, nil
+	}
+	if exitCode == 1 {
+		return false, nil
+	}
+	return false, fmt.Errorf("tmux has-session exit %d: %s", exitCode, strings.TrimSpace(stderr))
+}
+
 // SendKeysOptions controls key dispatch.
 type SendKeysOptions struct {
 	Target  string
@@ -217,6 +239,31 @@ func (c *Client) resolveSocket(socket string) string {
 		return socket
 	}
 	return c.defaultSocket
+}
+
+// AttachOptions controls attach behaviour.
+type AttachOptions struct {
+	Session string
+	Socket  string
+}
+
+// Attach connects the user to the specified tmux session.
+func (c *Client) Attach(ctx context.Context, opts AttachOptions) error {
+	session := strings.TrimSpace(opts.Session)
+	if session == "" {
+		return errors.New("session name is required")
+	}
+	socket := c.resolveSocket(opts.Socket)
+
+	args := c.baseArgs(socket, "attach-session", "-t", session)
+	_, stderr, exitCode, err := c.runner.Run(ctx, args, nil)
+	if err != nil {
+		return fmt.Errorf("tmux attach-session: %w", err)
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("tmux attach-session exit %d: %s", exitCode, strings.TrimSpace(stderr))
+	}
+	return nil
 }
 
 // ExecRunner executes tmux commands using os/exec.
