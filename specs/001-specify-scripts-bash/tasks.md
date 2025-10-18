@@ -40,7 +40,7 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 - [X] T005 Implement configuration loader with permission checks in pkg/orchestrator/config/config.go
 - [X] T006 Model session domain structs with YAML tags in pkg/domain/session/session.go
 - [X] T007 Implement YAML persistence driver for sessions/stats in pkg/runtime/storage/yaml_store.go
-- [ ] T008 Implement log rotation and redaction manager in pkg/telemetry/logs/manager.go
+- [X] T008 Implement log rotation and redaction manager in pkg/telemetry/logs/manager.go
 - [ ] T009 Implement tmux client wrappers for session/window ops in pkg/runtime/tmux/client.go
 - [ ] T010 Implement adapter registry with default codex/claude profiles in pkg/adapters/registry.go
 - [ ] T011 Implement telemetry collector for status/top metrics in pkg/telemetry/stats/collector.go
