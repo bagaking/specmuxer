@@ -24,10 +24,10 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Initialize Go module with go1.23/toolchain go1.24.2 in go.mod
-- [ ] T002 Scaffold Cobra root command with persistent flags in cmd/specmuxer/root.go
-- [ ] T003 Add CLI entrypoint wiring root command in cmd/specmuxer/main.go
-- [ ] T004 Add lint/test/coverage make targets enforcing constitution gates in Makefile
+- [X] T001 Initialize Go module with go1.23/toolchain go1.24.2 in go.mod
+- [X] T002 Scaffold Cobra root command with persistent flags in cmd/specmuxer/root.go
+- [X] T003 Add CLI entrypoint wiring root command in cmd/specmuxer/main.go
+- [X] T004 Add lint/test/coverage make targets enforcing constitution gates in Makefile
 
 ---
 
@@ -37,14 +37,14 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement configuration loader with permission checks in pkg/orchestrator/config/config.go
-- [ ] T006 Model session domain structs with YAML tags in pkg/domain/session/session.go
-- [ ] T007 Implement YAML persistence driver for sessions/stats in pkg/runtime/storage/yaml_store.go
+- [X] T005 Implement configuration loader with permission checks in pkg/orchestrator/config/config.go
+- [X] T006 Model session domain structs with YAML tags in pkg/domain/session/session.go
+- [X] T007 Implement YAML persistence driver for sessions/stats in pkg/runtime/storage/yaml_store.go
 - [ ] T008 Implement log rotation and redaction manager in pkg/telemetry/logs/manager.go
 - [ ] T009 Implement tmux client wrappers for session/window ops in pkg/runtime/tmux/client.go
 - [ ] T010 Implement adapter registry with default codex/claude profiles in pkg/adapters/registry.go
 - [ ] T011 Implement telemetry collector for status/top metrics in pkg/telemetry/stats/collector.go
-- [ ] T012 [P] Add unit tests for session serialization round-trip in pkg/domain/session/session_test.go
+- [X] T012 [P] Add unit tests for session serialization round-trip in pkg/domain/session/session_test.go
 - [ ] T013 [P] Add unit tests for tmux client error handling in pkg/runtime/tmux/client_test.go
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
