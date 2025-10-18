@@ -134,14 +134,14 @@ description: "Task list for SpecMuxer tmux AI Orchestrator implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T039 Update architecture overview with layering narrative in docs/concepts.md
-- [ ] T040 [P] Generate adapters guide covering overrides in docs/adapters.md
-- [ ] T041 [P] Document recovery walkthrough in docs/recovery.md
-- [ ] T042 [P] Compile troubleshooting FAQ in docs/faq.md
-- [ ] T043 Add changelog entry and version bump in CHANGELOG.md
-- [ ] T044 Refresh README quickstart/CLI table in README.md
-- [ ] T045 Create performance verification script for status/top in scripts/perf/status_benchmark.go
-- [ ] T046 Validate quickstart instructions against live CLI in specs/001-specify-scripts-bash/quickstart.md
+- [X] T039 Update architecture overview with layering narrative in docs/concepts.md
+- [X] T040 [P] Generate adapters guide covering overrides in docs/adapters.md
+- [X] T041 [P] Document recovery walkthrough in docs/recovery.md
+- [X] T042 [P] Compile troubleshooting FAQ in docs/faq.md
+- [X] T043 Add changelog entry and version bump in CHANGELOG.md
+- [X] T044 Refresh README quickstart/CLI table in README.md
+- [X] T045 Create performance verification script for status/top in scripts/perf/status_benchmark.go
+- [X] T046 Validate quickstart instructions against live CLI in specs/001-specify-scripts-bash/quickstart.md
 
 ---
 

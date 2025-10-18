@@ -33,6 +33,7 @@ Monitor:
 ```bash
 specmuxer status --json | jq '.projects[0].sessions[0]'
 specmuxer logs <session> --follow
+specmuxer top
 ```
 
 ## 5. Simulate Interruption & Resume (1 minute)
@@ -43,9 +44,13 @@ specmuxer resume --all
 - Resume summary shows which sessions restarted.
 - Post-resume commands from `sessions/<session>.yml` run automatically.
 
-## 6. Housekeeping (30 seconds)
-- `specmuxer gc --dry-run` lists orphan tmux panes and adoptable sessions.
-- `specmuxer top` renders live activity (Ctrl+C to exit).
+## 6. Housekeeping & Diagnostics (1 minute)
+```bash
+specmuxer gc
+specmuxer doctor
+```
+- `gc --adopt` cleans orphaned records when you're confident tmux sessions are gone.
+- `doctor` validates tmux availability, workspace permissions, and configuration.
 
 ## 7. Documentation & Next Steps
 - Explore `docs/concepts.md` for adapter architecture.
