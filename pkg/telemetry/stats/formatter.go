@@ -21,6 +21,7 @@ type JSONStatus struct {
 // JSONProject summarizes sessions in a project.
 type JSONProject struct {
 	ProjectID string        `json:"projectId"`
+	RootPath  string        `json:"rootPath,omitempty"`
 	Sessions  []JSONSession `json:"sessions"`
 }
 
@@ -33,6 +34,7 @@ type JSONSession struct {
 	LastOutputAt string                `json:"lastOutputAt,omitempty"`
 	Idle         bool                  `json:"idle"`
 	UserKilled   bool                  `json:"userKilled"`
+	TmuxAlive    bool                  `json:"tmuxAlive"`
 }
 
 // FormatJSON converts a snapshot to JSON representation.
@@ -46,6 +48,7 @@ func FormatJSON(snapshot Snapshot) ([]byte, error) {
 	for _, project := range snapshot.Projects {
 		j.Projects = append(j.Projects, JSONProject{
 			ProjectID: project.ProjectID,
+			RootPath:  project.RootPath,
 			Sessions:  convertSessions(project.Sessions),
 		})
 	}
@@ -60,21 +63,30 @@ func FormatTable(snapshot Snapshot, wide bool) string {
 	fmt.Fprintf(w, "Collected:\t%s\n", snapshot.CollectedAt.Format(time.RFC3339))
 	fmt.Fprintf(w, "Totals:\tactive %d\tidle %d\tstopped %d\tfailed %d\n", snapshot.Totals.Active, snapshot.Totals.Idle, snapshot.Totals.Stopped, snapshot.Totals.Failed)
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "PROJECT\tSESSION\tTOOL\tSTATUS\tLAST OUTPUT\tIDLE\tUSER KILLED")
+	fmt.Fprintln(w, "PROJECT\tSESSION\tTOOL\tSTATUS\tLAST OUTPUT\tIDLE\tUSER KILLED\tTMUX")
 	for _, project := range snapshot.Projects {
+		projectLabel := project.ProjectID
+		if project.RootPath != "" {
+			projectLabel = fmt.Sprintf("%s (%s)", project.ProjectID, project.RootPath)
+		}
 		for _, sess := range project.Sessions {
 			last := "-"
 			if sess.LastOutputAt != nil {
 				last = sess.LastOutputAt.Format(time.RFC3339)
 			}
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\t%t\n",
-				project.ProjectID,
+			tmuxState := "present"
+			if !sess.TmuxAlive {
+				tmuxState = "missing"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\t%t\t%s\n",
+				projectLabel,
 				displaySessionName(sess, wide),
 				sess.Tool,
 				sess.Status,
 				last,
 				sess.Idle,
 				sess.UserKilled,
+				tmuxState,
 			)
 		}
 	}
@@ -93,6 +105,7 @@ func convertSessions(sessions []SessionSummary) []JSONSession {
 			Status:     sess.Status,
 			Idle:       sess.Idle,
 			UserKilled: sess.UserKilled,
+			TmuxAlive:  sess.TmuxAlive,
 		}
 		if sess.LastOutputAt != nil {
 			js.LastOutputAt = sess.LastOutputAt.Format(time.RFC3339)

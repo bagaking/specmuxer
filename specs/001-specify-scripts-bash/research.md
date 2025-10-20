@@ -30,6 +30,14 @@
   **Rationale**: YAML matches spec requirement and supports comments/custom resume hooks. Applying rotation/permissions at write-time meets Operational Excellence. Redaction rules mirror patterns from existing internal tooling.  
   **Alternatives considered**: (1) Keep JSON for compatibility—rejected because spec mandates `.yml`; (2) Use embedded DB (boltdb)—overkill for single-host CLI; (3) Defer redaction—violates observability requirements.
 
+- **Decision**: Detect non交互终端场景并在 run/attach 阶段优雅降级，提供 socket/session 提示，同时在 tmux 客户端内绑定 stdin/stdout/stderr 以匹配 `ccmodel` 的 attach 体验。  
+  **Rationale**: 自动 attach 在 CI 或 API 调用场景下必须避免 `open terminal failed`，同时保留真实终端里的快捷体验；统一由 tmux 客户端封装可以保持 DRY。  
+  **Alternatives considered**: (1) 完全禁用自动 attach——会降低交互体验； (2) 在 CLI 层手动 fork `tmux attach`——会复制逻辑并破坏层次，故统一在 tmux 客户端实现。
+
+- **Decision**: Align codex adapter defaults with the modern Codex CLI (`codex` as entrypoint, `codex resume --last`, `codex --version` for health) and drop nonexistent stop/snapshot commands.  
+  **Rationale**: The CLI no longer exposes `codex run --interactive` or `codex stop`; using them caused sessions to exit immediately. Matching the actual tool semantics keeps sessions alive and preserves health checks even in non-interactive environments.  
+  **Alternatives considered**: (1) Retain legacy commands and expect downstream overrides—rejected because out-of-the-box UX would remain broken; (2) shell-wrap Codex through shims—unnecessary once definitions mirror the real CLI.
+
 ## Resolved Clarifications
 
 - `NEEDS CLARIFICATION: reusable adapter utilities from ccmodel/execcmd?` → We will re-implement with inspiration; no direct dependency required.

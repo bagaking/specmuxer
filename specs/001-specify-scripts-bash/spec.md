@@ -81,11 +81,11 @@ As a maintainer, I can use `logs`, `gc`, and `doctor` to diagnose issues, prune 
 
 - **FR-001**: Provide CLI commands `run`, `resume`, `attach`, `status`, `top`, `stop`, `logs`, `gc`, and `doctor` with arguments exactly as specified, including passthrough of `--` and support for JSON and wide formatting where called out.
 - **FR-002**: Persist all configuration, state, statistics, session metadata, and logs within a per-project `.specmuxer/` directory containing `conf.yml`, `stats.yml`, `sessions/*.yml`, and `logs/*.log`, honoring default permissions (0700 for directory, 0600 for logs) and configurable log rotation (default 200 MB daily).
-- **FR-003**: Generate stable project identifiers by hashing absolute paths and name tmux sessions using the pattern `specmuxer:p-<hash>-<tool>-<name>-<create_time>` to avoid collisions.
+- **FR-003**: Generate stable project identifiers by hashing absolute paths and name tmux sessions using the pattern `specmuxer_<hash>_<session-id>` (or equivalent sanitized form) to avoid collisions and ensure compatibility with `tmux` naming rules.
 - **FR-004**: Record session activity with timestamped log lines stored per session; `logs <session> --follow` must stream in real time and respect redaction rules defined via regular expressions.
 - **FR-005**: Deliver resume semantics where non user-killed sessions interrupted unexpectedly are eligible for automatic or manual recovery, while `user_killed=true` sessions are excluded until explicitly re-run.
 - **FR-006**: Allow users to toggle between manual resume (default) and automatic startup integration, and honor session-level YAML directives for post-resume commands such as `"请继续"` or `"/goahead"`.
-- **FR-007**: Detect actual tool liveness for `status` and `top` views using recent output timestamps (default idle threshold 120 s, configurable to 90/180 s) and present hierarchical project→session→pane data with optional JSON output.
+- **FR-007**: Detect actual tool liveness for `status` and `top` views using recent output timestamps (default idle threshold 120 s, configurable to 90/180 s) and present hierarchical project→session→pane data with optional JSON output, including tmux availability indicators for each session.
 - **FR-008**: Provide an adapter abstraction describing `start`, `resume`, `health`, `stop`, and `extract_state` behaviors per tool, allow project-scoped overrides, and ship defaults for popular AI assistants (codex, claude, etc.).
 - **FR-009**: Accept `--env KEY=VALUE` flags to propagate environment variables into launched or resumed tool processes and maintain tmux UI enhancements (status bar with last activity, sidebar shortcuts) compatible with mouse/trackpad interactions.
 - **FR-010**: Support Linux and macOS with tmux ≥ 3.x without requiring root access, and document best-effort guidance for Windows via WSL while explicitly stating lack of native Windows support.
@@ -94,6 +94,8 @@ As a maintainer, I can use `logs`, `gc`, and `doctor` to diagnose issues, prune 
 - **FR-013**: Ensure `doctor` inspects tmux version, PATH entries, permissions, and configuration validity, reporting next-step guidance referencing the affected project/session/adapter.
 - **FR-014**: Publish user-facing documentation (README “5-minute start”, docs covering concepts, adapters, recovery, FAQ), Semantic Versioning with changelog, MIT license, and issue/PR templates as part of the deliverable.
 - **FR-015**: Provide configuration for log redaction patterns, retain structured statistics in `stats.yml`, and expose metrics through CLI outputs without requiring external databases.
+- **FR-016**: Detect non-interactive shells and gracefully skip tmux attach attempts, surfacing socket/session details and guidance rather than propagating tmux errors.
+- **FR-017**: Before launching additional sessions while others remain active, prompt for confirmation (defaulting to abort when input is non-interactive) with an explicit `--force` override for automation.
 
 ### Key Entities *(include if feature involves data)*
 

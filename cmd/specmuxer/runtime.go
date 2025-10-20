@@ -57,6 +57,11 @@ func loadRuntime() (*runtimeDeps, error) {
 		Tmux:       tmuxClient,
 	})
 
+	projectPaths := map[string]string{}
+	if cfg != nil {
+		projectPaths[cfg.ProjectID] = cfg.WorkspaceRoot
+	}
+
 	return &runtimeDeps{
 		config:    cfg,
 		store:     store,
@@ -65,6 +70,6 @@ func loadRuntime() (*runtimeDeps, error) {
 		tmux:      tmuxClient,
 		runSvc:    runSvc,
 		resumeSvc: resumeSvc,
-		collector: stats.NewCollector(),
+		collector: stats.NewCollector(stats.WithProjectPaths(projectPaths)),
 	}, nil
 }

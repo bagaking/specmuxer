@@ -57,9 +57,17 @@ type Options struct {
 
 // Summary captures resume results.
 type Summary struct {
-	Attempted int
-	Succeeded int
-	Skipped   int
+	Attempted       int
+	Succeeded       int
+	Skipped         int
+	SucceededIDs    []string
+	SkippedSessions []SkippedSession
+}
+
+// SkippedSession captures a skipped resume attempt and its reason.
+type SkippedSession struct {
+	ID     string
+	Reason string
 }
 
 // NewService constructs a resume Service.
@@ -119,15 +127,60 @@ func (s *Service) Resume(ctx context.Context, opts Options) (Summary, error) {
 		def, err := s.registry.Resolve(rec.Tool, convertOverrides(s.cfg, rec.Tool))
 		if err != nil {
 			summary.Skipped++
+			summary.SkippedSessions = append(summary.SkippedSessions, SkippedSession{ID: rec.ID, Reason: fmt.Sprintf("adapter resolve failed: %v", err)})
 			continue
 		}
 
-		if !Eligible(rec, def) {
+		socket := rec.Tmux.Socket
+		if socket == "" {
+			socket = s.socketPath
+		}
+
+		safeName := run.BuildSessionName(s.cfg.ProjectID, rec.ID)
+		sessionName := safeName
+
+		alive := false
+		seen := map[string]struct{}{}
+		candidates := []string{}
+		addCandidate := func(name string) {
+			if name == "" {
+				return
+			}
+			if _, ok := seen[name]; ok {
+				return
+			}
+			seen[name] = struct{}{}
+			candidates = append(candidates, name)
+		}
+		addCandidate(rec.Tmux.Session)
+		addCandidate(strings.ReplaceAll(rec.Tmux.Session, ":", "_"))
+		addCandidate(safeName)
+
+		for _, candidate := range candidates {
+			ok, err := s.tmux.HasSession(ctx, candidate, socket)
+			if err != nil {
+				alive = false
+				continue
+			}
+			if ok {
+				alive = true
+				sessionName = candidate
+				break
+			}
+		}
+
+		if rec.Tmux.Session != "" && len(candidates) == 0 {
+			alive = false
+		}
+
+		if eligible, reason := EvaluateEligibility(rec, def, alive); !eligible {
 			summary.Skipped++
+			summary.SkippedSessions = append(summary.SkippedSessions, SkippedSession{ID: rec.ID, Reason: reason})
 			continue
 		}
 
 		if opts.DryRun {
+			summary.SkippedSessions = append(summary.SkippedSessions, SkippedSession{ID: rec.ID, Reason: "dry-run"})
 			continue
 		}
 
@@ -135,14 +188,15 @@ func (s *Service) Resume(ctx context.Context, opts Options) (Summary, error) {
 		env := mergeEnv(cmd.Env, rec.Env)
 
 		if err := s.tmux.EnsureSession(ctx, tmux.EnsureSessionOptions{
-			Session:    rec.Tmux.Session,
-			Socket:     s.socketPath,
+			Session:    sessionName,
+			Socket:     socket,
 			WindowName: cmd.Description,
 			Command:    cmd.Exec,
 			Env:        env,
 			WorkingDir: cmd.WorkingDir,
 		}); err != nil {
 			summary.Skipped++
+			summary.SkippedSessions = append(summary.SkippedSessions, SkippedSession{ID: rec.ID, Reason: err.Error()})
 			continue
 		}
 
@@ -150,9 +204,12 @@ func (s *Service) Resume(ctx context.Context, opts Options) (Summary, error) {
 		rec.Status = session.StatusRunning
 		rec.LastOutputAt = &now
 		session.SetUserKilled(&rec, false)
+		rec.Tmux.Socket = socket
+		rec.Tmux.Session = sessionName
 
 		if err := s.store.SaveSession(&rec); err != nil {
 			summary.Skipped++
+			summary.SkippedSessions = append(summary.SkippedSessions, SkippedSession{ID: rec.ID, Reason: fmt.Sprintf("persist session: %v", err)})
 			continue
 		}
 
@@ -161,6 +218,7 @@ func (s *Service) Resume(ctx context.Context, opts Options) (Summary, error) {
 		}
 
 		summary.Succeeded++
+		summary.SucceededIDs = append(summary.SucceededIDs, rec.ID)
 	}
 
 	if err := s.updateStats(summary); err != nil {

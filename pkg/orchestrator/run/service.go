@@ -40,6 +40,11 @@ type Service struct {
 	socketPath string
 }
 
+// BuildSessionName returns the tmux session name used for a SpecMuxer session.
+func BuildSessionName(projectID, sessionID string) string {
+	return fmt.Sprintf("specmuxer_%s_%s", projectID, sessionID)
+}
+
 // ServiceConfig bundles dependencies for Service.
 type ServiceConfig struct {
 	Config     *config.Config
@@ -103,7 +108,7 @@ func (s *Service) Launch(ctx context.Context, req LaunchRequest) (string, error)
 	sessionID := generateSessionID()
 	now := s.clock()
 
-	sessionName := fmt.Sprintf("specmuxer:p-%s-%s", s.cfg.ProjectID, sessionID)
+	sessionName := BuildSessionName(s.cfg.ProjectID, sessionID)
 	command := append([]string(nil), def.Start.Exec...)
 	if len(req.Args) > 0 {
 		command = append(command, req.Args...)

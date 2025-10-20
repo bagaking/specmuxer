@@ -27,7 +27,11 @@ func newStatusCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			ctx := cmd.Context()
+			liveInfo := computeLiveness(ctx, deps.tmux, records, deps.runSvc.SocketPath())
+			deps.collector.SetLiveness(livenessAsBool(liveInfo))
 			snapshot := deps.collector.BuildSnapshot(records)
+			defer deps.collector.SetLiveness(nil)
 
 			jsonOutput, _ := cmd.Flags().GetBool("json")
 			wide, _ := cmd.Flags().GetBool("wide")

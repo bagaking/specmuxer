@@ -14,6 +14,8 @@ type Collector struct {
 	idleThreshold time.Duration
 	now           func() time.Time
 	topLimit      int
+	projectPaths  map[string]string
+	liveness      map[string]bool
 }
 
 // Option configures a Collector.
@@ -46,12 +48,39 @@ func WithTopLimit(limit int) Option {
 	}
 }
 
+// WithProjectPaths supplies workspace paths keyed by project ID.
+func WithProjectPaths(paths map[string]string) Option {
+	return func(c *Collector) {
+		if paths == nil {
+			return
+		}
+		c.projectPaths = make(map[string]string, len(paths))
+		for k, v := range paths {
+			c.projectPaths[k] = v
+		}
+	}
+}
+
+// SetLiveness injects tmux liveness information keyed by session ID.
+func (c *Collector) SetLiveness(live map[string]bool) {
+	if live == nil {
+		c.liveness = map[string]bool{}
+		return
+	}
+	c.liveness = make(map[string]bool, len(live))
+	for k, v := range live {
+		c.liveness[k] = v
+	}
+}
+
 // NewCollector constructs a Collector with optional configuration.
 func NewCollector(opts ...Option) *Collector {
 	c := &Collector{
 		idleThreshold: defaultIdleThreshold,
 		now:           time.Now,
 		topLimit:      10,
+		projectPaths:  map[string]string{},
+		liveness:      map[string]bool{},
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -78,6 +107,7 @@ type Totals struct {
 // ProjectSummary groups sessions by project.
 type ProjectSummary struct {
 	ProjectID string
+	RootPath  string
 	Sessions  []SessionSummary
 }
 
@@ -91,6 +121,7 @@ type SessionSummary struct {
 	LastOutputAt *time.Time
 	Idle         bool
 	UserKilled   bool
+	TmuxAlive    bool
 }
 
 // BuildSnapshot aggregates telemetry for the provided sessions.
@@ -117,7 +148,15 @@ func (c *Collector) BuildSnapshot(records []session.SessionRecord) Snapshot {
 		}
 
 		summary.Idle = c.isIdle(now, record)
-		switch record.Status {
+		summary.TmuxAlive = c.isAlive(record.ID)
+
+		statusForTotals := summary.Status
+		if !summary.TmuxAlive && summary.Status == session.StatusRunning {
+			summary.Status = session.StatusStopped
+			statusForTotals = session.StatusStopped
+		}
+
+		switch statusForTotals {
 		case session.StatusRunning:
 			if summary.Idle {
 				totalIdle++
@@ -141,6 +180,7 @@ func (c *Collector) BuildSnapshot(records []session.SessionRecord) Snapshot {
 		sortSessionsByLastOutput(sessions)
 		projectSummaries = append(projectSummaries, ProjectSummary{
 			ProjectID: projectID,
+			RootPath:  c.projectPaths[projectID],
 			Sessions:  sessions,
 		})
 	}
@@ -183,6 +223,10 @@ func (c *Collector) Top(records []session.SessionRecord, limit int) []SessionSum
 			LastOutputAt: record.LastOutputAt,
 			UserKilled:   record.UserKilled != nil && *record.UserKilled,
 			Idle:         c.isIdle(now, record),
+			TmuxAlive:    c.isAlive(record.ID),
+		}
+		if !summary.TmuxAlive && summary.Status == session.StatusRunning {
+			summary.Status = session.StatusStopped
 		}
 		summaries = append(summaries, summary)
 	}
@@ -201,6 +245,17 @@ func (c *Collector) isIdle(now time.Time, record session.SessionRecord) bool {
 		return record.Status == session.StatusIdle
 	}
 	return now.Sub(*record.LastOutputAt) >= c.idleThreshold
+}
+
+func (c *Collector) isAlive(id string) bool {
+	if c.liveness == nil {
+		return true
+	}
+	alive, ok := c.liveness[id]
+	if !ok {
+		return true
+	}
+	return alive
 }
 
 func sortSessionsByLastOutput(sessions []SessionSummary) {

@@ -27,7 +27,8 @@ func newTopCommand() *cobra.Command {
 				return err
 			}
 
-			streamer := stats.NewStreamer(stats.NewCollector())
+			streamer := stats.NewStreamer(deps.collector)
+			deps.collector.SetLiveness(nil)
 			ctx := cmd.Context()
 			if ctx == nil || ctx == context.Background() {
 				ctx = context.TODO()

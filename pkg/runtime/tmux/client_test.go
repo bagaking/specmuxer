@@ -231,6 +231,23 @@ func TestAttachSession(t *testing.T) {
 	assertArgsEqual(t, runner.calls[0].Args, []string{"-S", "/tmp/socket", "attach-session", "-t", "specmuxer:p-1"})
 }
 
+func TestAttachSessionUsesInteractiveRunnerWhenAvailable(t *testing.T) {
+	runner := &interactiveRunnerStub{}
+	client := New(WithRunner(runner))
+
+	err := client.Attach(context.Background(), AttachOptions{
+		Session: "specmuxer:p-1",
+		Socket:  "/tmp/socket",
+	})
+	if err != nil {
+		t.Fatalf("Attach (interactive): %v", err)
+	}
+	if len(runner.calls) != 1 {
+		t.Fatalf("expected interactive runner to be used")
+	}
+	assertArgsEqual(t, runner.calls[0].Args, []string{"-S", "/tmp/socket", "attach-session", "-t", "specmuxer:p-1"})
+}
+
 func TestHasSession(t *testing.T) {
 	runner := &stubRunner{
 		responses: []runResponse{
@@ -251,6 +268,10 @@ func TestHasSession(t *testing.T) {
 type stubRunner struct {
 	responses []runResponse
 	calls     []runCall
+}
+
+type interactiveRunnerStub struct {
+	calls []runCall
 }
 
 type runResponse struct {
@@ -279,6 +300,18 @@ func (s *stubRunner) Run(_ context.Context, args []string, env map[string]string
 		Env:  cloneMap(env),
 	})
 	return resp.stdout, resp.stderr, resp.exitCode, resp.err
+}
+
+func (i *interactiveRunnerStub) Run(_ context.Context, args []string, env map[string]string) (string, string, int, error) {
+	return "", "", 0, errors.New("Run should not be called when interactive is available")
+}
+
+func (i *interactiveRunnerStub) RunInteractive(_ context.Context, args []string, env map[string]string) error {
+	if env == nil {
+		env = map[string]string{}
+	}
+	i.calls = append(i.calls, runCall{Args: append([]string(nil), args...), Env: cloneMap(env)})
+	return nil
 }
 
 func cloneMap(in map[string]string) map[string]string {

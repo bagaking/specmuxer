@@ -16,6 +16,10 @@ type Runner interface {
 	Run(ctx context.Context, args []string, env map[string]string) (stdout string, stderr string, exitCode int, err error)
 }
 
+type interactiveRunner interface {
+	RunInteractive(ctx context.Context, args []string, env map[string]string) error
+}
+
 // ClientOption configures a Client.
 type ClientOption func(*Client)
 
@@ -256,6 +260,12 @@ func (c *Client) Attach(ctx context.Context, opts AttachOptions) error {
 	socket := c.resolveSocket(opts.Socket)
 
 	args := c.baseArgs(socket, "attach-session", "-t", session)
+	if interactive, ok := c.runner.(interactiveRunner); ok {
+		if err := interactive.RunInteractive(ctx, args, nil); err != nil {
+			return fmt.Errorf("tmux attach-session: %w", err)
+		}
+		return nil
+	}
 	_, stderr, exitCode, err := c.runner.Run(ctx, args, nil)
 	if err != nil {
 		return fmt.Errorf("tmux attach-session: %w", err)
@@ -303,6 +313,25 @@ func (r *ExecRunner) Run(ctx context.Context, args []string, env map[string]stri
 	}
 
 	return stdout.String(), stderr.String(), exitCode, nil
+}
+
+// RunInteractive executes the tmux command while attaching to the parent's stdio.
+func (r *ExecRunner) RunInteractive(ctx context.Context, args []string, env map[string]string) error {
+	bin := r.Bin
+	if bin == "" {
+		bin = "tmux"
+	}
+	cmd := exec.CommandContext(ctx, bin, args...)
+
+	if env != nil {
+		cmd.Env = mergeEnv(os.Environ(), env)
+	}
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
 }
 
 func mergeEnv(base []string, overrides map[string]string) []string {

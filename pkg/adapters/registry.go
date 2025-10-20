@@ -184,28 +184,21 @@ func builtinAdapters() []Definition {
 		{
 			Name: "codex",
 			Start: LifecycleCommand{
-				Exec:        []string{"codex", "run", "--interactive"},
+				Exec:        []string{"codex"},
 				Env:         map[string]string{"TERM": "xterm-256color"},
 				OnFailure:   FailurePolicyRetry,
 				Description: "Launch Codex interactive CLI session",
 			},
 			Resume: &LifecycleCommand{
-				Exec:        []string{"codex", "resume"},
+				Exec:        []string{"codex", "resume", "--last"},
 				OnFailure:   FailurePolicyFallback,
 				Description: "Resume Codex session from stored state",
 			},
 			Health: &LifecycleCommand{
-				Exec:        []string{"codex", "status"},
-				Description: "Health probe for Codex CLI session",
+				Exec:        []string{"codex", "--version"},
+				Description: "Verify Codex CLI availability",
 			},
-			Stop: &LifecycleCommand{
-				Exec:        []string{"codex", "stop"},
-				Description: "Gracefully stop Codex session",
-			},
-			ExtractState: &LifecycleCommand{
-				Exec:        []string{"codex", "snapshot"},
-				Description: "Export Codex session state",
-			},
+			// Codex CLI does not expose a standalone stop/snapshot command; rely on tmux lifecycle.
 			SupportsAttach: true,
 		},
 		{

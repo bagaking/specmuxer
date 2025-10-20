@@ -23,6 +23,7 @@ func TestFormatJSONSerializesSnapshot(t *testing.T) {
 		Projects: []ProjectSummary{
 			{
 				ProjectID: "proj-1",
+				RootPath:  "/workspace",
 				Sessions: []SessionSummary{
 					{
 						ID:           "sess-1",
@@ -31,6 +32,7 @@ func TestFormatJSONSerializesSnapshot(t *testing.T) {
 						HumanName:    "Primary",
 						Status:       session.StatusRunning,
 						LastOutputAt: &last,
+						TmuxAlive:    true,
 					},
 				},
 			},
@@ -40,6 +42,7 @@ func TestFormatJSONSerializesSnapshot(t *testing.T) {
 				ID:        "sess-1",
 				ProjectID: "proj-1",
 				Tool:      "codex",
+				TmuxAlive: true,
 			},
 		},
 	}
@@ -60,10 +63,16 @@ func TestFormatJSONSerializesSnapshot(t *testing.T) {
 	if len(parsed.Projects) != 1 || parsed.Projects[0].ProjectID != "proj-1" {
 		t.Fatalf("unexpected projects: %#v", parsed.Projects)
 	}
+	if parsed.Projects[0].RootPath != "/workspace" {
+		t.Fatalf("expected root path, got %#v", parsed.Projects[0].RootPath)
+	}
 	if len(parsed.Projects[0].Sessions) != 1 || parsed.Projects[0].Sessions[0].ID != "sess-1" {
 		t.Fatalf("unexpected sessions: %#v", parsed.Projects[0].Sessions)
 	}
 	if parsed.Projects[0].Sessions[0].LastOutputAt == "" {
 		t.Fatalf("expected last output timestamp")
+	}
+	if !parsed.Projects[0].Sessions[0].TmuxAlive {
+		t.Fatalf("expected tmuxAlive true")
 	}
 }

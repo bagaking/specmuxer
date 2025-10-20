@@ -6,14 +6,14 @@ SpecMuxer orchestrates tmux-based AI tool sessions with durable YAML metadata, l
 
 | Command | Description |
 |---------|-------------|
-| `specmuxer run <adapter> [--env KEY=VALUE] [-- name] [-- adapter args]` | Launch a new adapter session inside tmux |
+| `specmuxer run <adapter> [--env KEY=VALUE] [-- name] [-- adapter args] [--force]` | Launch a new adapter session inside tmux (auto-detaches when no interactive TTY is present; prompts before creating another when sessions already running) |
 | `specmuxer status [--json] [--wide]` | Show session hierarchy and metrics |
 | `specmuxer top` | Stream live updates similar to `top` |
-| `specmuxer resume [--all|--session id] [--dry-run]` | Resume eligible sessions |
+| `specmuxer resume [--all] [--dry-run] [session id...]` | Resume eligible sessions |
 | `specmuxer logs --session id [--tail N] [--follow]` | Tail redacted session logs |
 | `specmuxer gc [--adopt]` | Inspect and prune orphaned sessions |
 | `specmuxer doctor` | Run environment diagnostics |
-| `specmuxer attach <session>` | Attach to an existing tmux session |
+| `specmuxer attach <session>` | Attach to an existing tmux session (requires interactive TTY) |
 
 ## Quickstart
 
@@ -27,6 +27,7 @@ SpecMuxer orchestrates tmux-based AI tool sessions with durable YAML metadata, l
    specmuxer run codex --name primary -- --plan
    specmuxer status --wide
    ```
+   *When run from CI or any non-interactive shell, SpecMuxer skips automatic attach and prints the tmux session/socket so you can connect later from a real terminal. If other sessions are already running, add `--force` to bypass the confirmation prompt automatically.*
 4. Resume after reboot:
    ```bash
    specmuxer resume --all

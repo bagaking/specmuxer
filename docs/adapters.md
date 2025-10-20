@@ -4,7 +4,7 @@ SpecMuxer ships with `codex` and `claude` adapter definitions inside `pkg/adapte
 
 | Adapter | Start Command | Resume Command | Health Check | Extract State | Supports Attach |
 |---------|---------------|----------------|--------------|---------------|-----------------|
-| codex   | `codex run --interactive` | `codex resume` (fallbacks to start if override absent) | `codex status` | `codex snapshot` | Yes |
+| codex   | `codex` | `codex resume --last` (fallbacks to start if override absent) | `codex --version` | _n/a_ | Yes |
 | claude  | `claude workbench start` | `claude workbench resume` | `claude workbench status` | `claude workbench export` | Yes |
 
 ## Overriding Lifecycle Commands
