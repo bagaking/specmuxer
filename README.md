@@ -11,9 +11,9 @@ with project-local YAML metadata, log handling, and resume helpers.
 - Session state is stored under `.specmuxer/` in the selected workspace.
 - The project has unit and integration tests, including tmux-backed integration
   tests that are skipped when `tmux` is unavailable.
-- Coverage is below the configured maintainer threshold: the checked-in coverage
-  profile reports `27.9%` total statement coverage, while `make coverage`
-  enforces `95%`.
+- Coverage is below the configured maintainer threshold: a recent local
+  coverage run reported `27.9%` total statement coverage, while
+  `make coverage` enforces `95%`.
 
 ## Verified Scope
 
