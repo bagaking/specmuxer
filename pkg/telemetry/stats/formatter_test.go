@@ -2,6 +2,7 @@ package stats
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -74,5 +75,54 @@ func TestFormatJSONSerializesSnapshot(t *testing.T) {
 	}
 	if !parsed.Projects[0].Sessions[0].TmuxAlive {
 		t.Fatalf("expected tmuxAlive true")
+	}
+}
+
+func TestFormatTableWideIncludesRootSessionIDAndTmuxState(t *testing.T) {
+	last := time.Date(2025, time.October, 18, 9, 30, 0, 0, time.UTC)
+	snapshot := Snapshot{
+		CollectedAt: time.Date(2025, time.October, 18, 10, 0, 0, 0, time.UTC),
+		Totals: Totals{
+			Active:  1,
+			Stopped: 1,
+		},
+		Projects: []ProjectSummary{
+			{
+				ProjectID: "proj-1",
+				RootPath:  "workspace",
+				Sessions: []SessionSummary{
+					{
+						ID:           "sess-1",
+						Tool:         "codex",
+						HumanName:    "Primary",
+						Status:       session.StatusRunning,
+						LastOutputAt: &last,
+						TmuxAlive:    false,
+					},
+					{
+						ID:        "sess-2",
+						Tool:      "claude",
+						Status:    session.StatusStopped,
+						TmuxAlive: true,
+					},
+				},
+			},
+		},
+	}
+
+	table := FormatTable(snapshot, true)
+	for _, want := range []string{
+		"Collected:  2025-10-18T10:00:00Z",
+		"Totals:     active 1  idle 0  stopped 1  failed 0",
+		"proj-1 (workspace)",
+		"Primary (sess-1)",
+		"2025-10-18T09:30:00Z",
+		"missing",
+		"sess-2",
+		"present",
+	} {
+		if !strings.Contains(table, want) {
+			t.Fatalf("expected table to contain %q, got:\n%s", want, table)
+		}
 	}
 }
