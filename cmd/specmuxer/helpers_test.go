@@ -143,6 +143,73 @@ func TestComputeLivenessReusesTmuxProbeResults(t *testing.T) {
 	}
 }
 
+func TestComputeLivenessDoesNotShareDistinctTmuxProbes(t *testing.T) {
+	records := []session.SessionRecord{
+		{
+			ID:        "sess-1",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_shared",
+				Socket:  "specmuxer-a.sock",
+			},
+		},
+		{
+			ID:        "sess-2",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_shared",
+				Socket:  "specmuxer-b.sock",
+			},
+		},
+		{
+			ID:        "sess-3",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_other",
+				Socket:  "specmuxer-a.sock",
+			},
+		},
+	}
+	runner := &livenessCountingRunnerStub{exitCode: 0}
+	tmuxClient := tmux.New(tmux.WithRunner(runner))
+
+	got := computeLiveness(context.Background(), tmuxClient, records, "default.sock")
+
+	if runner.calls != 3 {
+		t.Fatalf("tmux probe calls = %d, want 3", runner.calls)
+	}
+	for _, rec := range records {
+		if !got[rec.ID].Alive {
+			t.Fatalf("expected %s alive, got %#v", rec.ID, got[rec.ID])
+		}
+	}
+}
+
+func TestComputeLivenessDoesNotCacheAcrossCalls(t *testing.T) {
+	records := []session.SessionRecord{
+		{
+			ID:        "sess-1",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_shared",
+				Socket:  "specmuxer.sock",
+			},
+		},
+	}
+	runner := &livenessCountingRunnerStub{exitCode: 0}
+	tmuxClient := tmux.New(tmux.WithRunner(runner))
+
+	first := computeLiveness(context.Background(), tmuxClient, records, "default.sock")
+	second := computeLiveness(context.Background(), tmuxClient, records, "default.sock")
+
+	if runner.calls != 2 {
+		t.Fatalf("tmux probe calls after two computeLiveness calls = %d, want 2", runner.calls)
+	}
+	if !first["sess-1"].Alive || !second["sess-1"].Alive {
+		t.Fatalf("expected both calls to report alive, got first=%#v second=%#v", first, second)
+	}
+}
+
 type sessionListerStub struct {
 	records []session.SessionRecord
 	err     error
