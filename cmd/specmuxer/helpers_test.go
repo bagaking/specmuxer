@@ -2,11 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bagaking/specmuxer/pkg/domain/session"
+	"github.com/bagaking/specmuxer/pkg/runtime/tmux"
+	"github.com/bagaking/specmuxer/pkg/telemetry/stats"
 )
 
 func TestAllTerminalNil(t *testing.T) {
@@ -69,4 +73,64 @@ func TestPromptYesNo(t *testing.T) {
 	if ok {
 		t.Fatal("expected rejection on empty input")
 	}
+}
+
+func TestFetchSessionsWithLivenessMarksMissingTmuxAsStopped(t *testing.T) {
+	now := time.Date(2025, time.October, 18, 12, 0, 0, 0, time.UTC)
+	records := []session.SessionRecord{
+		{
+			ID:           "sess-missing",
+			ProjectID:    "proj",
+			Tool:         "codex",
+			Status:       session.StatusRunning,
+			LastOutputAt: &now,
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_sess-missing",
+				Socket:  "/tmp/specmuxer.sock",
+			},
+		},
+	}
+	collector := stats.NewCollector(stats.WithClock(func() time.Time { return now }))
+	tmuxClient := tmux.New(tmux.WithRunner(&livenessRunnerStub{exitCode: 1}))
+	fetch := fetchSessionsWithLiveness(context.Background(), &sessionListerStub{records: records}, collector, tmuxClient, "/tmp/default.sock")
+
+	got, err := fetch()
+	if err != nil {
+		t.Fatalf("fetchSessionsWithLiveness() error = %v, want nil", err)
+	}
+	if len(got) != 1 || got[0].ID != "sess-missing" {
+		t.Fatalf("fetchSessionsWithLiveness() = %#v, want sess-missing record", got)
+	}
+
+	snapshot := collector.BuildSnapshot(got)
+	if snapshot.Totals.Stopped != 1 {
+		t.Fatalf("BuildSnapshot() stopped total = %d, want 1", snapshot.Totals.Stopped)
+	}
+	if snapshot.Projects[0].Sessions[0].TmuxAlive {
+		t.Fatalf("BuildSnapshot() tmux alive = true, want false")
+	}
+}
+
+type sessionListerStub struct {
+	records []session.SessionRecord
+	err     error
+}
+
+func (s *sessionListerStub) ListSessions() ([]session.SessionRecord, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return append([]session.SessionRecord(nil), s.records...), nil
+}
+
+type livenessRunnerStub struct {
+	exitCode int
+	err      error
+}
+
+func (s *livenessRunnerStub) Run(_ context.Context, _ []string, _ map[string]string) (string, string, int, error) {
+	if s.err != nil {
+		return "", "", -1, s.err
+	}
+	return "", "", s.exitCode, nil
 }
