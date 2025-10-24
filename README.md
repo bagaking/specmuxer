@@ -1,6 +1,33 @@
 # SpecMuxer
 
-SpecMuxer orchestrates tmux-based AI tool sessions with durable YAML metadata, log redaction, and self-healing workflows.
+SpecMuxer is a Go CLI for launching and inspecting tmux-backed AI tool sessions
+with project-local YAML metadata, log handling, and resume helpers.
+
+## Current Status
+
+- Implemented as a Go module with a Cobra CLI under `cmd/specmuxer`.
+- Verified commands include `run`, `status`, `top`, `resume`, `logs`, `gc`,
+  `doctor`, and `attach`.
+- Session state is stored under `.specmuxer/` in the selected workspace.
+- The project has unit and integration tests, including tmux-backed integration
+  tests that are skipped when `tmux` is unavailable.
+- Coverage is below the configured maintainer threshold: the checked-in coverage
+  profile reports `27.9%` total statement coverage, while `make coverage`
+  enforces `95%`.
+
+## Verified Scope
+
+The README claims only behavior covered by the current CLI, docs, and tests:
+
+- launching adapter commands inside tmux sessions
+- listing live and persisted session state
+- resuming eligible sessions
+- reading redacted logs
+- inspecting or pruning orphaned records
+- running local environment diagnostics
+
+It does not claim a published package, remote service, hosted control plane, or
+complete recovery automation.
 
 ## CLI Commands
 
