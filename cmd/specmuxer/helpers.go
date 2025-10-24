@@ -37,6 +37,10 @@ func computeLiveness(ctx context.Context, client *tmux.Client, records []session
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	probes := map[struct {
+		socket  string
+		session string
+	}]bool{}
 	for _, rec := range records {
 		socket := rec.Tmux.Socket
 		if socket == "" {
@@ -65,8 +69,18 @@ func computeLiveness(ctx context.Context, client *tmux.Client, records []session
 		addCandidate(run.BuildSessionName(rec.ProjectID, rec.ID))
 
 		for _, candidate := range candidates {
-			ok, err := client.HasSession(ctx, candidate, socket)
-			if err == nil && ok {
+			key := struct {
+				socket  string
+				session string
+			}{socket: socket, session: candidate}
+			ok, seen := probes[key]
+			if !seen {
+				var err error
+				ok, err = client.HasSession(ctx, candidate, socket)
+				ok = err == nil && ok
+				probes[key] = ok
+			}
+			if ok {
 				info.Alive = true
 				info.Session = candidate
 				break

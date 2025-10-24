@@ -111,6 +111,38 @@ func TestFetchSessionsWithLivenessMarksMissingTmuxAsStopped(t *testing.T) {
 	}
 }
 
+func TestComputeLivenessReusesTmuxProbeResults(t *testing.T) {
+	records := []session.SessionRecord{
+		{
+			ID:        "sess-1",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_shared",
+				Socket:  "specmuxer.sock",
+			},
+		},
+		{
+			ID:        "sess-2",
+			ProjectID: "proj",
+			Tmux: session.TmuxMetadata{
+				Session: "specmuxer_proj_shared",
+				Socket:  "specmuxer.sock",
+			},
+		},
+	}
+	runner := &livenessCountingRunnerStub{exitCode: 0}
+	tmuxClient := tmux.New(tmux.WithRunner(runner))
+
+	got := computeLiveness(context.Background(), tmuxClient, records, "default.sock")
+
+	if runner.calls != 1 {
+		t.Fatalf("tmux probe calls = %d, want 1", runner.calls)
+	}
+	if !got["sess-1"].Alive || !got["sess-2"].Alive {
+		t.Fatalf("expected both sessions alive, got %#v", got)
+	}
+}
+
 type sessionListerStub struct {
 	records []session.SessionRecord
 	err     error
@@ -132,5 +164,15 @@ func (s *livenessRunnerStub) Run(_ context.Context, _ []string, _ map[string]str
 	if s.err != nil {
 		return "", "", -1, s.err
 	}
+	return "", "", s.exitCode, nil
+}
+
+type livenessCountingRunnerStub struct {
+	exitCode int
+	calls    int
+}
+
+func (s *livenessCountingRunnerStub) Run(_ context.Context, _ []string, _ map[string]string) (string, string, int, error) {
+	s.calls++
 	return "", "", s.exitCode, nil
 }
