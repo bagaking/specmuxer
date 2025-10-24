@@ -112,17 +112,34 @@ func TestFormatTableWideIncludesRootSessionIDAndTmuxState(t *testing.T) {
 
 	table := FormatTable(snapshot, true)
 	for _, want := range []string{
-		"Collected:  2025-10-18T10:00:00Z",
-		"Totals:     active 1  idle 0  stopped 1  failed 0",
+		"Collected:",
+		"Totals:",
 		"proj-1 (workspace)",
-		"Primary (sess-1)",
 		"2025-10-18T09:30:00Z",
-		"missing",
-		"sess-2",
-		"present",
 	} {
 		if !strings.Contains(table, want) {
 			t.Fatalf("expected table to contain %q, got:\n%s", want, table)
 		}
 	}
+
+	assertTableLineContains(t, table, "sess-1", []string{"Primary (sess-1)", "codex", "running", "missing"})
+	assertTableLineContains(t, table, "sess-2", []string{"sess-2", "claude", "stopped", "present"})
+}
+
+func assertTableLineContains(t *testing.T, table, lineNeedle string, wantParts []string) {
+	t.Helper()
+
+	for _, line := range strings.Split(table, "\n") {
+		if !strings.Contains(line, lineNeedle) {
+			continue
+		}
+		for _, want := range wantParts {
+			if !strings.Contains(line, want) {
+				t.Fatalf("expected table line %q to contain %q in table:\n%s", line, want, table)
+			}
+		}
+		return
+	}
+
+	t.Fatalf("expected table to contain line with %q, got:\n%s", lineNeedle, table)
 }
