@@ -39,3 +39,15 @@ SpecMuxer orchestrates tmux-based AI tool sessions with durable YAML metadata, l
    ```
 
 See `docs/` for architecture, adapter overrides, recovery walkthroughs, and troubleshooting tips.
+
+## Maintainer Verification
+
+Use the make targets as the local verification entrypoints:
+
+```bash
+make test
+make lint
+make coverage
+```
+
+`make lint` requires `golangci-lint` on `PATH`. `make coverage` runs the race-enabled test suite with an atomic coverage profile and reports the project threshold result; the current tree is below the configured threshold, so use it as a coverage gap report until coverage is raised or the threshold policy changes.

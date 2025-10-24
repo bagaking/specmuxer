@@ -22,7 +22,7 @@ test:
 
 coverage:
 	go test ./... -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
-	@go tool cover -func=coverage.out | tail -n1 | awk '{print $$3}' | awk -F% '{if ($$1 < 95) {printf \"coverage %.2f%% is below required 95%%\\n\", $$1; exit 1}}'
+	@go tool cover -func=coverage.out | tail -n1 | awk '{print $$3}' | awk -F% '{if ($$1 < 95) {printf "coverage %.2f%% is below required 95%%\n", $$1; exit 1}}'
 
 install:
 	go install ./cmd/specmuxer

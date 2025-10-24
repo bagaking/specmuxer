@@ -1,8 +1,6 @@
 package resume
 
 import (
-	"strings"
-
 	"github.com/bagaking/specmuxer/pkg/adapters"
 	"github.com/bagaking/specmuxer/pkg/domain/session"
 )
@@ -32,8 +30,4 @@ func EvaluateEligibility(record session.SessionRecord, def adapters.Definition, 
 	}
 
 	return false, "adapter missing resume/start command"
-}
-
-func adapterKey(name string) string {
-	return strings.ToLower(name)
 }
